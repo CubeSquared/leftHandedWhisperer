@@ -3,27 +3,19 @@ app.logInOutView = Backbone.View.extend({
   el: document.getElementsByClassName('loginout'),
 
   initialize : function() {
-    this.loginView = new app.loginView({});
-    this.logoutView = new app.logoutView({});
-    this.viewLogin();
+    app.login = this.login = new app.loginView({});
+    app.logout = this.logout = new app.logoutView({});
+    this.render('login');
+    setTimeout(function() { app.login.login() }, 500); 
   },
 
   events : {
-    'app_loggedInState' : 'viewLogout', //login trigger
-    'app_loggedOutState' : 'viewLogin', //logout trigger
-  },
-
-  viewLogin : function() {
-    this.render('loginView');
-  },
-
-  viewLogout : function() {
-    this.render('logoutView');
+    // 'app_loggedInState' : 'viewLogout', //login trigger
+    // 'app_loggedOutState' : 'viewLogin', //logout trigger
   },
 
   render : function(view) {
-    console.log('in the loginoutview render function')
     this.$el.children().detach();
-    this.$el.append(this[view].render());
+    this.$el.append(app[view].render());
   }
 });

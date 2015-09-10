@@ -1,14 +1,13 @@
 var sampleUsers = require('./db/userExamples')
 var sampleEvents = require('./db/eventExamples')
 
+//prod is a copy of the DATABASE_URL environment variable
+var prodConnectionString = 'postgres://hbkuimaybryhch:0gFQCqUGNsMaOOZcmkYVzRcaAz@ec2-54-83-18-87.compute-1.amazonaws.com:5432/d9opd1ipu4em4v';
+var devConnectionString = 'postgres://127.0.0.1:5432/database';
 
 var knex = require('knex')({
-  client: 'mysql',
-  connection: {
-    host: '127.0.0.1',
-    user: 'root',
-    database: 'database'
-  }
+  client: 'pg',
+  connection: process.env.DATABASE_URL || devConnectionString
 });
 
 var db = require('bookshelf')(knex);
@@ -36,7 +35,7 @@ db.knex.schema.hasTable('events').then(function(exists) {
   if (!exists) {
     db.knex.schema.createTable('events', function(table) {
       table.increments('id').primary();
-      table.string('user_id', 100);
+      table.integer('user_id');
       table.string('name', 255);
       table.string('description', 255);
       table.string('venue', 255);
@@ -44,7 +43,10 @@ db.knex.schema.hasTable('events').then(function(exists) {
       table.string('address', 255);
       table.string('city', 255);
       table.string('state', 255);
-      table.integer('zip');
+      table.string('zip',10);
+      table.float('lat');
+      table.float('long');
+
 
     }).then(function(table) {
       console.log('created table :', 'events');
@@ -58,6 +60,25 @@ db.knex.schema.hasTable('events').then(function(exists) {
   }
 });
 
+//this is for the followers join table
+db.knex.schema.hasTable('followers').then(function(exists) {
+  if (!exists) {
+    db.knex.schema.createTable('followers', function(table) {
+      table.increments('id').primary();
+      table.integer('follower_id');
+      table.integer('followed_id');
+
+    }).then(function(table) {
+      console.log('created table :', 'followers');
+    })
+    .catch(function(error) {
+      console.log(error);
+    });
+  } else {
+  }
+});
+
+//check if example data is already in table, if it is we wont add it to the DB
 var tableDataContainsInfo = function(tableData, field, value) {
   for (var i = 0; i < tableData.length; i++) {
     //check for value in field
@@ -68,6 +89,7 @@ var tableDataContainsInfo = function(tableData, field, value) {
   return false;
 };
 
+//insert example data (from JSON objects) into DB
 var insertInfoInTable = function(tableName, callback) {
   var tableInfo;
   if (tableName === 'users') {

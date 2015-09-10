@@ -13,18 +13,16 @@ app.signupView = Backbone.View.extend({
         <label for="signupCity">City</label>\
         <input type="text" class="form-control" id="signupCity" placeholder="City" required>\
       </div>\
-      <input class="btn btn-default" id="signupButton" type="button" value="Signup">\
+      <input class="btn btn-default" id="signupButton" type="submit" value="Signup">\
     </form>\
   ',
 
-  initialize : function() {
-  },
-
   events : {
-    'click #signupButton' : 'signup',
+    'submit' : 'signup',
   },
 
-  signup : function() {
+  signup : function(event) {
+    event.preventDefault();
     console.log('signup')
     var username = this.$el.find('#signupUsername').val();
     var password = this.$el.find('#signupPassword').val();
@@ -33,8 +31,20 @@ app.signupView = Backbone.View.extend({
     console.log('username: ',username);
     console.log('password: ',password);
     console.log('city: ', city)
-    app.currentUser = new app.User({username:username,password:password,city:city});
-    app.currentUser.sync('create',app.currentUser,{url:'/signup'});
+
+    $.post('/users/signup', {username: username, password: password, city: city})
+      .done(function(data) {
+        console.log('signing up: ', data);
+        app.allUsers.fetch({
+          success: function() {
+            if (!app.currentUser) app.login.login(null, username, password);
+            app.filter.toggleSideView();
+          }
+        });
+        //this is setting current user to data, not a true User instance
+      }).fail(function() {
+        console.log('login error');
+      });
   },
 
   render : function() {

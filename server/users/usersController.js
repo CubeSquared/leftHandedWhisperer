@@ -20,14 +20,14 @@ module.exports = {
   },
 
   getUser: function(req, res) {
-    var username = (url.parse(req.url).pathname).slice(1);
-    console.log('retrieving username:' + username);
+    var user_ID = (url.parse(req.url).pathname).slice(1);
+    console.log('retrieving info for user_id:' + user_ID);
     var R = Promise.promisify(utils.retrieveUser);
-    R(username).then(function(user) {
+    R(user_ID).then(function(user) {
       if (user) {
         res.json(user);
       } else {
-        res.status(404).end();
+        res.status(500).end();
       }
     })
     .catch(function(error) {
@@ -42,13 +42,33 @@ module.exports = {
       if (data) {
         res.json(data);
       } else {
-        res.status(400).end();
+        res.status(500).end();
       }
     })
     .catch(function(error) {
       console.log('controller error: ',error);
     });
   },
+
+  updateUser: function(req, res) {
+    var user_ID = (url.parse(req.url).pathname).slice(1);
+    var userInfo = req.body;
+
+    console.log('updating user_id:', user_ID, ' with info: ', userInfo );
+    var R = Promise.promisify(utils.updateUser);
+    R(user_ID,userInfo).then(function(user) {
+      if (user) {
+        res.json(user);
+      } else {
+        res.status(500).end();
+      }
+    })
+    .catch(function(error) {
+      console.log('controller error: ',error);
+    });
+  },
+
+
 
   loginUser: function(req, res) {
     console.log('checking user: ',req.body);
@@ -58,11 +78,12 @@ module.exports = {
         utils.createSession(req, res, data);
         res.json(data);
       } else {
-        res.status(400).end();
+        res.status(500).end();
       }
     })
     .catch(function(error) {
       console.log('controller error: ',error);
+      res.status(500).end();
     });
   },
 
@@ -71,6 +92,45 @@ module.exports = {
       console.log('session destroyed');
         // res.redirect('/login');
       });
-  }
+    res.status(200).end()
+  },
+
+
+  getFollowing: function(req, res) {
+    var user_ID = (url.parse(req.url).pathname).slice(8);
+    console.log('retrieving followed for user_id:' + user_ID);
+    var R = Promise.promisify(utils.retrieveFollowing);
+    R(user_ID).then(function(followed) {
+      if (followed) {
+        res.json(followed);
+      } else {
+        res.status(404).end();
+      }
+    })
+    .catch(function(error) {
+      console.log('controller error: ',error);
+    });
+  },
+
+  addFollowing: function(req, res) {
+    //the user with user_id is now following the user with following_id
+    var follower_id = req.body.follower_id;
+    var following_id = req.body.following_id;
+    utils.storeFollowing(follower_id, following_id, function() {
+      res.status(201).end();
+    });
+  },
+
+  removeFollowing: function(req, res) {
+    var follower_id = req.body.follower_id;
+    var unFollowing_id = req.body.unFollowing_id;
+    console.log('follower_id: ' + follower_id + ' unFollowing_id: ' + unFollowing_id);
+    utils.removeFollowing(follower_id, unFollowing_id, function() {
+      res.status(201).end();
+    });
+
+  },
+
+
 
 };

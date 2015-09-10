@@ -13,10 +13,19 @@ app.logoutView = Backbone.View.extend({
   },
 
   logout : function() {
-    console.log('logging out');
+    $.get('/users/logout')
+      .done(function() {
+        console.log('logging out');
+        app.currentUser = null;
+        app.navbar.$el.find('.user').remove();
+        app.sidepage.$el.children().detach();
+        app.loginout.render('login');
+      }).fail(function() {
+        console.log('logout error');
+      });
   },
 
-  render : function(view) {
+  render : function() {
     return this.$el;
   }
 });

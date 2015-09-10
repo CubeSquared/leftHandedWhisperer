@@ -1,53 +1,32 @@
-app.dayView = Backbone.View.extend({
+app.dayView = Backbone.View.extend({ //holds all the information for events
 
-  defaults: {
-    day: 1/1/11;
-  },
+  model: app.Event,
 
-  data: [],
-
-  el: '\
-    <h1>' + day.format() + '</h1>\
-  ',
+  template: _.template('\
+    <h2>Event: <%= name %></h2> \
+    <div class="list-group">\
+      <a class="list-group-item">Address: <%= address %><p></p><%= city %>, <%= state %>, <%= zip %></a>\
+      <a class="list-group-item">Date: <%= shortDate %></a>\
+      <a class="list-group-item">Venue: <%= venue %></a>\
+      <a class="list-group-item">Description: <%= description %></a>\
+      <a class="list-group-item">Event Creator: <%= username %></a>\
+    </div>\
+  '),
 
   initialize: function() {
-
-    this.collection.forEach(function(item) {
-      if (item.attributes.date === this.day) {
-        this.data.push(item);
-      }
-    });
-
-    this.render();
   },
 
   events: {
-    'click ul' : 
+    // 'click ul' :
   },
 
   render: function(view) {
-    for (var i = 0; i < this.data.length; i++) {
-      var newEvent = new eventView({model: this.data[i]});
-      this.$el.append(newEvent);
-      if (i !== this.data.length - 1) {
-        this.$el.append($('<hr>'));
-      }
-    }
-
+    var attributes = this.model.attributes;
+    attributes['username'] = app.allUsers.findWhere({id:attributes['user_id']}).get('username');
+    attributes['shortDate'] = this.model.shortDate();
+    this.$el.html(this.template(this.model.attributes));
     return this.$el;
   }
 
+
 });
-
-
-//When we initialize this, we'll pass a date to it. This is because we don't have a day model,
-//and clicking on calendar days will give us that data.
-//It looks something like: 
-/**
-dayClick: function(date, jsEvent, view) {
-  var today = new app.dayView({day: date});
-  today.render().appendTo($('body'));
-}
-
-We need to make sure we're converting all the dates from native Dates to fullcalendar moments
-*/

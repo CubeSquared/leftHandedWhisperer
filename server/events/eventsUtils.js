@@ -5,6 +5,9 @@ var Event = require('../models/event');
 
 module.exports = {
 
+  //all these utils are fired from eventsController to access the postgres DB
+
+  //get all events from DB
   retrieveAllEvents: function(callback) {
     Events.reset().fetch().then(function(events) {
       callback(null,events);
@@ -13,13 +16,11 @@ module.exports = {
       console.log('error:', error);
     });
   },
+
+  //get one events from DB by ID
   retrieveEvent: function(eventID,callback) {
     new Event({ id: eventID }).fetch({withRelated: ['user'], require: true}).then(function(found) {
       if (found) {
-
-        // var eventsWithUser = found.attributes;
-        // eventsWithUser.user = found.relations.user;
-
         callback(null,found.attributes);
       } else {
         console.log('event not found:' + eventName);
@@ -29,8 +30,9 @@ module.exports = {
       console.log('error:', error);
     });
   },
+
+  //set new event to DB
   storeEvent: function(event,callback) {
-    console.log("event to add to DB: ", event);
 
     var name = event.name;
     var description = event.description;
@@ -41,17 +43,20 @@ module.exports = {
     var state = event.state;
     var zip = event.zip;
     var user_id = event.user_id;
-
-    console.log("check");
+    var lat = event.lat;
+    var long = event.long;
 
     new Event({name:name}).fetch().then(function(found) {
       if (found) {
+        console.log('event already found: ',found.attributes);
         callback(null,found.attributes);
       } else {
 
-        var event = new Event({name:name,description:description,venue:venue,date:date,address:address,city:city,state:state,zip:zip,user_id:user_id});
+        var event = new Event({name:name,description:description,venue:venue,date:date,address:address,city:city,state:state,zip:zip,user_id:user_id,lat:lat,long:long});
 
         event.save().then(function(newEvent) {
+          console.log('saved event: ',newEvent);
+
           Events.add(newEvent);
           callback(null,newEvent);
         })
